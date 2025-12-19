@@ -3,124 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>核薪計算器 V3.3 - 專業完整版</title>
+    <!-- Canva 爬蟲需要的 Meta 標籤 -->
+    <title>核薪範圍試算工具 - 專業版</title>
+    <meta name="description" content="基於 104 市場基準與 12+B 制度的專業核薪工具">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
+        html, body { 
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc; 
+        }
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
-            background-color: transparent; 
-            margin: 0;
-            padding: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center; 
         }
-        /* 隱藏捲軸 */
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        .logic-card { background: rgba(248, 250, 252, 0.8); border: 1px dashed #cbd5e1; }
+        /* 定製化捲軸 */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* 增加深度感，防止在 Canva 中顯得扁平 */
+        .premium-shadow {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .logic-card { background: rgba(255, 255, 255, 0.7); border: 1px dashed #e2e8f0; }
+        
+        /* 響應式容器：寬度自適應 Canvas 設計的方框 */
+        .app-container {
+            width: 100%;
+            height: 100%;
+            max-width: 450px; /* 限制最大寬度，保持比例 */
+            max-height: 650px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="max-w-full mx-auto bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
-        <div class="grid grid-cols-1 md:grid-cols-12">
-            
-            <!-- 左側：輸入區 -->
-            <div class="md:col-span-5 p-6 bg-slate-50 border-r border-slate-200">
-                <div class="flex items-center mb-6">
-                    <div class="w-2 h-6 bg-indigo-600 rounded mr-2"></div>
-                    <h2 class="text-lg font-bold text-slate-800">核薪試算參數</h2>
-                </div>
-                
-                <div class="space-y-4">
-                    <!-- 職稱選擇 -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">目標職稱</label>
-                        <select id="role" onchange="calculateSalary()" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer font-medium">
-                            <option value="軟體|專員">軟體工程專員</option>
-                            <option value="軟體|副理">軟體工程副理</option>
-                            <option value="軟體|經理" selected>軟體工程經理</option>
-                            <option value="軟體|協理">軟體工程協理</option>
-                            <option value="專案|專員">專案管理專員</option>
-                            <option value="專案|經理">專案管理經理</option>
-                            <option value="業務|專員">業務開發專員</option>
-                            <option value="業務|協理">業務開發協理</option>
-                        </select>
-                    </div>
-
-                    <div class="flex space-x-4">
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-slate-500 mb-1">固定年終 (B)</label>
-                            <input type="number" id="bonusMonths" value="2" min="0" step="0.5" oninput="calculateSalary()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-slate-500 mb-1">相關年資</label>
-                            <input type="number" id="expYears" value="5" min="0" oninput="calculateSalary()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                    </div>
-
-                    <!-- 面試分數 -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">面試綜合評分 (0-100)</label>
-                        <input type="range" id="scoreRange" value="85" min="0" max="100" oninput="syncScore(this.value)" class="w-full accent-indigo-600 mb-2">
-                        <div class="flex justify-between items-center">
-                            <input type="number" id="scoreInput" value="85" min="0" max="100" oninput="syncRange(this.value)" class="w-16 border border-slate-300 rounded-lg px-2 py-1 text-center text-xs font-bold text-indigo-600">
-                            <span id="scoreStatus" class="text-[10px] font-black px-2 py-0.5 rounded uppercase transition-colors">標準</span>
-                        </div>
-                    </div>
-                </div>
+    <!-- 容器現在會填滿 Canva 給它的空間 -->
+    <div class="app-container bg-white rounded-3xl premium-shadow border border-slate-200 flex flex-col relative overflow-hidden">
+        
+        <!-- 固定頭部：核薪參數 -->
+        <div class="p-5 bg-slate-50 border-b border-slate-100 flex-shrink-0">
+            <div class="flex items-center mb-4">
+                <div class="w-1.5 h-5 bg-indigo-600 rounded-full mr-2 shadow-sm"></div>
+                <h2 class="text-base font-black text-slate-800 tracking-tight">核薪試算參數</h2>
             </div>
-
-            <!-- 右側：結果區 -->
-            <div class="md:col-span-7 p-6 bg-white flex flex-col justify-center">
-                <div class="mb-4">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">104 市場基準月薪 (M)</p>
-                    <p id="displayM" class="text-2xl font-black text-indigo-700">NT$ 0</p>
+            
+            <div class="space-y-3">
+                <!-- 職稱選擇 -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">目標職稱</label>
+                    <select id="role" onchange="calculateSalary()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer font-bold text-slate-700 shadow-sm appearance-none">
+                        <option value="軟體|專員">軟體工程專員</option>
+                        <option value="軟體|副理">軟體工程副理</option>
+                        <option value="軟體|經理" selected>軟體工程經理</option>
+                        <option value="軟體|協理">軟體工程協理</option>
+                        <option value="專案|專員">專案管理專員</option>
+                        <option value="專案|經理">專案管理經理</option>
+                        <option value="業務|專員">業務開發專員</option>
+                        <option value="業務|協理">業務開發協理</option>
+                    </select>
                 </div>
 
-                <div class="mb-6">
-                    <p class="text-xs font-bold text-slate-600 mb-2 flex justify-between">
-                        建議核定月薪 <span id="formulaTag" class="text-[10px] text-indigo-500 font-bold">12+2 制度</span>
-                    </p>
-                    <div id="monthlyResult" class="text-4xl md:text-5xl font-black text-emerald-600 tracking-tighter">
-                        NT$ 0 - 0
+                <div class="flex space-x-3">
+                    <div class="flex-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">年終 (B)</label>
+                        <div class="relative">
+                            <input type="number" id="bonusMonths" value="2" min="0" step="0.5" oninput="calculateSalary()" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-black focus:ring-2 focus:ring-indigo-500 shadow-sm">
+                            <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">月</span>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">相關年資</label>
+                        <div class="relative">
+                            <input type="number" id="expYears" value="5" min="0" oninput="calculateSalary()" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-black focus:ring-2 focus:ring-indigo-500 shadow-sm">
+                            <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">年</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="p-4 bg-indigo-600 rounded-2xl shadow-md text-white">
-                    <p class="text-[10px] font-bold text-indigo-200 uppercase mb-1">核定年薪總額 (市場加權值)</p>
-                    <p id="annualResult" class="text-xl font-bold italic tracking-tight">NT$ 0 - 0</p>
+                <!-- 面試分數 -->
+                <div class="pt-1">
+                    <div class="flex justify-between items-end mb-1 px-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase">面試評分</label>
+                        <span id="scoreStatus" class="text-[9px] font-black px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 uppercase">標準</span>
+                    </div>
+                    <input type="range" id="scoreRange" value="85" min="0" max="100" oninput="syncScore(this.value)" class="w-full accent-indigo-600 h-2 rounded-lg appearance-none cursor-pointer bg-slate-200">
+                    <div class="flex justify-center mt-2">
+                        <input type="number" id="scoreInput" value="85" min="0" max="100" oninput="syncRange(this.value)" class="w-14 border-b-2 border-indigo-200 bg-transparent text-center text-sm font-black text-indigo-600 outline-none">
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 下方：詳細說明區 (加權說明與計算原則) -->
-        <div class="p-6 bg-slate-50 border-t border-slate-200">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <!-- 加權分數明細 -->
-                <div class="logic-card p-4 rounded-xl">
-                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center">
-                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path></svg>
+        <!-- 可捲動區：結果 -->
+        <div class="flex-grow overflow-y-auto">
+            <div class="p-6 bg-white space-y-5">
+                <!-- 市場基準 -->
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">104 市場基準 (M)</p>
+                        <p id="displayM" class="text-2xl font-black text-indigo-600">NT$ 0</p>
+                    </div>
+                    <span id="formulaTag" class="text-[9px] text-indigo-500 font-black bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100">12+2 制度</span>
+                </div>
+
+                <!-- 建議月薪 -->
+                <div class="py-5 border-y border-slate-50 text-center">
+                    <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">建議核定月薪範圍</p>
+                    <div id="monthlyResult" class="text-4xl font-black text-emerald-500 tracking-tighter">
+                        NT$ 0 - 0
+                    </div>
+                </div>
+
+                <!-- 建議年薪 -->
+                <div class="p-4 bg-slate-900 rounded-2xl shadow-xl text-center">
+                    <p class="text-[9px] font-bold text-indigo-300 uppercase mb-1 tracking-widest">核定建議年薪總額</p>
+                    <p id="annualResult" class="text-xl font-black italic tracking-tight text-white">NT$ 0 - 0</p>
+                </div>
+
+                <!-- 加權明細 -->
+                <div class="logic-card p-4 rounded-2xl mt-4">
+                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center">
+                        <svg class="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                         目前加權係數明細
                     </h3>
-                    <div id="factorDetail" class="space-y-2 text-xs">
+                    <div id="factorDetail" class="space-y-2 text-[11px] font-bold text-slate-600">
                         <!-- 動態填充 -->
                     </div>
                 </div>
 
-                <!-- 計算原則說明 -->
-                <div class="logic-card p-4 rounded-xl">
-                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center">
-                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2H7a1 1 0 100-2h.01zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path></svg>
-                        系統計算原則
-                    </h3>
-                    <ul class="text-[10px] text-slate-500 space-y-1 list-disc pl-3">
-                        <li>數據取自 104 人力銀行各職類 P50 中位數。</li>
-                        <li><strong>年薪守恆：</strong>月薪隨年終月數自動調整，總年薪不變。</li>
-                        <li><strong>績效掛鉤：</strong>面試 65 分以下降權 0.9，100 分加權 1.1。</li>
-                        <li><strong>公式：</strong>月薪 = (M × 12 × 總權重) ÷ (12 + B)。</li>
+                <!-- 計算原則 -->
+                <div class="p-1">
+                    <ul class="text-[10px] text-slate-400 space-y-1.5 leading-relaxed">
+                        <li class="flex items-start"><span class="mr-2">•</span>基準取自 104 人力銀行 P50 中位數。</li>
+                        <li class="flex items-start"><span class="mr-2">•</span>採<strong>年薪守恆</strong>原則，隨年終月數自動折算。</li>
+                        <li class="flex items-start"><span class="mr-2">•</span>面試表現影響 0.9 ~ 1.1 倍權重。</li>
                     </ul>
                 </div>
-
             </div>
         </div>
     </div>
@@ -142,7 +167,8 @@
         function formatCurrency(n) { return "NT$ " + Math.round(n).toLocaleString(); }
 
         function calculateSalary() {
-            const [dep, level] = document.getElementById('role').value.split('|');
+            const roleSelect = document.getElementById('role');
+            const [dep, level] = roleSelect.value.split('|');
             const bonusMonths = parseFloat(document.getElementById('bonusMonths').value || '0');
             const expYears = parseFloat(document.getElementById('expYears').value || '0');
             const score = parseFloat(document.getElementById('scoreInput').value || '0');
@@ -150,45 +176,37 @@
             const data = MARKET_DATA.find(d => d.dep === dep && d.level === level);
             if (!data) return;
 
-            // 1. 面試加權 (Weight Logic)
             const interviewW = score < 65 ? 0.9 : (1.0 + (score - 65) / 35 * 0.1);
-            // 2. 年資加權 (Base + 每多一年 0.015)
             const expW = data.exp_w + (expYears * 0.015);
-            // 3. 總加權
             const totalW = expW * interviewW;
 
-            // 4. 年薪計算
             const baseAnnualMid = data.m * 12;
             const adjAnnualMin = (baseAnnualMid * (1 - data.spread / 2)) * totalW;
             const adjAnnualMax = (baseAnnualMid * (1 + data.spread / 2)) * totalW;
 
-            // 5. 月薪倒推 (12 + B)
             const divisor = 12 + bonusMonths;
             const monthlyMin = adjAnnualMin / divisor;
             const monthlyMax = adjAnnualMax / divisor;
 
-            // --- UI 更新 ---
             document.getElementById('displayM').textContent = formatCurrency(data.m);
             document.getElementById('formulaTag').textContent = `12 + ${bonusMonths} 制度`;
             document.getElementById('monthlyResult').textContent = `${formatCurrency(monthlyMin)} - ${formatCurrency(monthlyMax)}`;
             document.getElementById('annualResult').textContent = `${formatCurrency(adjAnnualMin)} - ${formatCurrency(adjAnnualMax)}`;
 
-            // 加權標籤狀態
             const statusEl = document.getElementById('scoreStatus');
             if (score < 65) {
-                statusEl.textContent = "降階加權"; statusEl.className = "text-[10px] font-black px-2 py-0.5 rounded bg-red-100 text-red-600 uppercase";
+                statusEl.textContent = "降階加權"; statusEl.className = "text-[9px] font-black px-1.5 py-0.5 rounded bg-red-50 text-red-500 uppercase";
             } else if (score >= 90) {
-                statusEl.textContent = "優選加權"; statusEl.className = "text-[10px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-600 uppercase";
+                statusEl.textContent = "優選加權"; statusEl.className = "text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-500 uppercase";
             } else {
-                statusEl.textContent = "標準加權"; statusEl.className = "text-[10px] font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-600 uppercase";
+                statusEl.textContent = "標準加權"; statusEl.className = "text-[9px] font-black px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-500 uppercase";
             }
 
-            // 填充係數明細
             document.getElementById('factorDetail').innerHTML = `
-                <div class="flex justify-between"><span>年資加權因子 (Exp):</span><span class="font-bold text-slate-700">${expW.toFixed(3)}</span></div>
-                <div class="flex justify-between"><span>面試加權因子 (Score):</span><span class="font-bold text-slate-700">${interviewW.toFixed(3)}</span></div>
-                <div class="flex justify-between border-t border-slate-200 pt-1 mt-1 text-indigo-600 font-black">
-                    <span>最終總加權係數:</span><span>${totalW.toFixed(3)}</span>
+                <div class="flex justify-between"><span>年資加權因子:</span><span>${expW.toFixed(3)}</span></div>
+                <div class="flex justify-between"><span>面試評分加權:</span><span>${interviewW.toFixed(3)}</span></div>
+                <div class="flex justify-between border-t border-slate-100 pt-2 mt-1 text-indigo-600 font-black">
+                    <span>最終總加權值:</span><span class="text-base">${totalW.toFixed(3)}</span>
                 </div>
             `;
         }
