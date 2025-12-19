@@ -3,62 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Canva 爬蟲需要的 Meta 標籤 -->
-    <title>核薪範圍試算工具 - 專業版</title>
-    <meta name="description" content="基於 104 市場基準與 12+B 制度的專業核薪工具">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>專業核薪試算工具 (台幣)</title>
     <style>
-        html, body { 
-            height: 100%;
+        :root {
+            --primary: #4f46e5;
+            --success: #10b981;
+            --bg: #f8fafc;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body, html {
             margin: 0;
             padding: 0;
-            background-color: #f8fafc; 
-        }
-        body { 
-            font-family: 'Noto Sans TC', sans-serif; 
+            height: 100%;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f1f5f9;
             display: flex;
             justify-content: center;
-            align-items: center; 
+            align-items: center;
+            overflow: hidden;
         }
-        /* 定製化捲軸 */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        
-        /* 增加深度感，防止在 Canva 中顯得扁平 */
-        .premium-shadow {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
-        .logic-card { background: rgba(255, 255, 255, 0.7); border: 1px dashed #e2e8f0; }
-        
-        /* 響應式容器：寬度自適應 Canvas 設計的方框 */
-        .app-container {
+
+        .container {
             width: 100%;
             height: 100%;
-            max-width: 450px; /* 限制最大寬度，保持比例 */
-            max-height: 650px;
+            max-width: 400px;
+            max-height: 500px;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
         }
+
+        /* 標題區 */
+        .header {
+            padding: 14px 20px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #f1f5f9;
+            flex-shrink: 0;
+        }
+
+        .title-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .indicator {
+            width: 3px;
+            height: 14px;
+            background: var(--primary);
+            border-radius: 2px;
+            margin-right: 8px;
+        }
+
+        .title {
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        /* 104 調查說明文字 */
+        .source-text {
+            font-size: 9px;
+            color: var(--text-sub);
+            margin-bottom: 12px;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-main);
+            outline: none;
+            background: white;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .flex-row > div { flex: 1; }
+
+        /* 結果內容區 */
+        .content {
+            flex-grow: 1;
+            padding: 16px 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .market-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .label-sm { font-size: 9px; font-weight: 800; color: var(--text-sub); margin-bottom: 2px; }
+        .value-m { font-size: 20px; font-weight: 900; color: var(--text-main); line-height: 1; }
+
+        .tag {
+            font-size: 9px;
+            font-weight: 800;
+            background: #f0f4ff;
+            color: var(--primary);
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .result-box {
+            text-align: center;
+            padding: 4px 0;
+        }
+
+        .monthly-value {
+            font-size: 34px;
+            font-weight: 900;
+            color: var(--success);
+            letter-spacing: -1.5px;
+            line-height: 1;
+        }
+
+        .annual-card {
+            background: #0f172a;
+            color: white;
+            padding: 10px;
+            border-radius: 14px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .annual-value {
+            font-size: 17px;
+            font-weight: 800;
+            color: #c7d2fe;
+            margin-top: 2px;
+        }
+
+        .detail-card {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-sub);
+            margin-bottom: 3px;
+        }
+
+        .total-w { 
+            color: var(--primary); 
+            font-weight: 900; 
+            border-top: 1px solid #e2e8f0; 
+            margin-top: 4px;
+            padding-top: 4px; 
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+            height: 4px;
+            margin: 6px 0;
+        }
+
+        .score-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score-val {
+            font-size: 10px;
+            font-weight: 900;
+            color: var(--primary);
+            background: #eef2ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* 隱藏捲軸 */
+        .content::-webkit-scrollbar { width: 3px; }
+        .content::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- 容器現在會填滿 Canva 給它的空間 -->
-    <div class="app-container bg-white rounded-3xl premium-shadow border border-slate-200 flex flex-col relative overflow-hidden">
-        
-        <!-- 固定頭部：核薪參數 -->
-        <div class="p-5 bg-slate-50 border-b border-slate-100 flex-shrink-0">
-            <div class="flex items-center mb-4">
-                <div class="w-1.5 h-5 bg-indigo-600 rounded-full mr-2 shadow-sm"></div>
-                <h2 class="text-base font-black text-slate-800 tracking-tight">核薪試算參數</h2>
+    <div class="container">
+        <div class="header">
+            <div class="title-row">
+                <div class="indicator"></div>
+                <h1 class="title">核薪建議分析系統 (台幣)</h1>
+            </div>
+            <!-- 放回 104 調查說明文字 -->
+            <div class="source-text">
+                基礎數據：104 人力銀行職類薪資調查<br>
+                (Market Median P50)
             </div>
             
-            <div class="space-y-3">
-                <!-- 職稱選擇 -->
+            <div class="input-group">
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">目標職稱</label>
-                    <select id="role" onchange="calculateSalary()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer font-bold text-slate-700 shadow-sm appearance-none">
+                    <label>目標職稱</label>
+                    <select id="role" onchange="calculateSalary()">
                         <option value="軟體|專員">軟體工程專員</option>
                         <option value="軟體|副理">軟體工程副理</option>
                         <option value="軟體|經理" selected>軟體工程經理</option>
@@ -70,82 +253,49 @@
                     </select>
                 </div>
 
-                <div class="flex space-x-3">
-                    <div class="flex-1">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">年終 (B)</label>
-                        <div class="relative">
-                            <input type="number" id="bonusMonths" value="2" min="0" step="0.5" oninput="calculateSalary()" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-black focus:ring-2 focus:ring-indigo-500 shadow-sm">
-                            <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">月</span>
-                        </div>
+                <div class="flex-row">
+                    <div>
+                        <label>固定年終 (B)</label>
+                        <input type="number" id="bonusMonths" value="2" step="0.5" oninput="calculateSalary()">
                     </div>
-                    <div class="flex-1">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">相關年資</label>
-                        <div class="relative">
-                            <input type="number" id="expYears" value="5" min="0" oninput="calculateSalary()" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-black focus:ring-2 focus:ring-indigo-500 shadow-sm">
-                            <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">年</span>
-                        </div>
+                    <div>
+                        <label>相關年資</label>
+                        <input type="number" id="expYears" value="5" oninput="calculateSalary()">
                     </div>
                 </div>
 
-                <!-- 面試分數 -->
-                <div class="pt-1">
-                    <div class="flex justify-between items-end mb-1 px-1">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase">面試評分</label>
-                        <span id="scoreStatus" class="text-[9px] font-black px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 uppercase">標準</span>
+                <div>
+                    <div class="score-info">
+                        <label>面試總評分</label>
+                        <span id="scoreText" class="score-val">85</span>
                     </div>
-                    <input type="range" id="scoreRange" value="85" min="0" max="100" oninput="syncScore(this.value)" class="w-full accent-indigo-600 h-2 rounded-lg appearance-none cursor-pointer bg-slate-200">
-                    <div class="flex justify-center mt-2">
-                        <input type="number" id="scoreInput" value="85" min="0" max="100" oninput="syncRange(this.value)" class="w-14 border-b-2 border-indigo-200 bg-transparent text-center text-sm font-black text-indigo-600 outline-none">
-                    </div>
+                    <input type="range" id="scoreRange" value="85" min="0" max="100" oninput="syncScore(this.value)">
                 </div>
             </div>
         </div>
 
-        <!-- 可捲動區：結果 -->
-        <div class="flex-grow overflow-y-auto">
-            <div class="p-6 bg-white space-y-5">
-                <!-- 市場基準 -->
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">104 市場基準 (M)</p>
-                        <p id="displayM" class="text-2xl font-black text-indigo-600">NT$ 0</p>
-                    </div>
-                    <span id="formulaTag" class="text-[9px] text-indigo-500 font-black bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100">12+2 制度</span>
+        <div class="content">
+            <div class="market-row">
+                <div>
+                    <div class="label-sm">月薪基礎</div>
+                    <div id="displayM" class="value-m">0</div>
                 </div>
+                <div id="formulaTag" class="tag">12 + 2 制度</div>
+            </div>
 
-                <!-- 建議月薪 -->
-                <div class="py-5 border-y border-slate-50 text-center">
-                    <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">建議核定月薪範圍</p>
-                    <div id="monthlyResult" class="text-4xl font-black text-emerald-500 tracking-tighter">
-                        NT$ 0 - 0
-                    </div>
-                </div>
+            <div class="result-box">
+                <div class="label-sm">建議核定月薪範圍</div>
+                <div id="monthlyResult" class="monthly-value">0 - 0</div>
+            </div>
 
-                <!-- 建議年薪 -->
-                <div class="p-4 bg-slate-900 rounded-2xl shadow-xl text-center">
-                    <p class="text-[9px] font-bold text-indigo-300 uppercase mb-1 tracking-widest">核定建議年薪總額</p>
-                    <p id="annualResult" class="text-xl font-black italic tracking-tight text-white">NT$ 0 - 0</p>
-                </div>
+            <div class="annual-card">
+                <div class="label-sm" style="color: #94a3b8; margin-bottom: 2px;">建議年度總所得預算</div>
+                <div id="annualResult" class="annual-value">0 - 0</div>
+            </div>
 
-                <!-- 加權明細 -->
-                <div class="logic-card p-4 rounded-2xl mt-4">
-                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center">
-                        <svg class="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        目前加權係數明細
-                    </h3>
-                    <div id="factorDetail" class="space-y-2 text-[11px] font-bold text-slate-600">
-                        <!-- 動態填充 -->
-                    </div>
-                </div>
-
-                <!-- 計算原則 -->
-                <div class="p-1">
-                    <ul class="text-[10px] text-slate-400 space-y-1.5 leading-relaxed">
-                        <li class="flex items-start"><span class="mr-2">•</span>基準取自 104 人力銀行 P50 中位數。</li>
-                        <li class="flex items-start"><span class="mr-2">•</span>採<strong>年薪守恆</strong>原則，隨年終月數自動折算。</li>
-                        <li class="flex items-start"><span class="mr-2">•</span>面試表現影響 0.9 ~ 1.1 倍權重。</li>
-                    </ul>
-                </div>
+            <div class="detail-card">
+                <div class="label-sm" style="margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">加權核定細項</div>
+                <div id="factorDetail"></div>
             </div>
         </div>
     </div>
@@ -162,16 +312,22 @@
             {"dep": "業務", "level": "協理", "m": 125000, "spread": 0.40, "exp_w": 1.00},
         ];
 
-        function syncScore(val) { document.getElementById('scoreInput').value = val; calculateSalary(); }
-        function syncRange(val) { document.getElementById('scoreRange').value = val; calculateSalary(); }
-        function formatCurrency(n) { return "NT$ " + Math.round(n).toLocaleString(); }
+        function syncScore(val) {
+            document.getElementById('scoreText').innerText = val;
+            calculateSalary();
+        }
+
+        function formatValue(n) {
+            /** 僅回傳包含千分位的數字，絕不含 NT$ */
+            return Math.round(n).toLocaleString('zh-TW');
+        }
 
         function calculateSalary() {
             const roleSelect = document.getElementById('role');
             const [dep, level] = roleSelect.value.split('|');
             const bonusMonths = parseFloat(document.getElementById('bonusMonths').value || '0');
             const expYears = parseFloat(document.getElementById('expYears').value || '0');
-            const score = parseFloat(document.getElementById('scoreInput').value || '0');
+            const score = parseFloat(document.getElementById('scoreRange').value || '0');
 
             const data = MARKET_DATA.find(d => d.dep === dep && d.level === level);
             if (!data) return;
@@ -188,25 +344,16 @@
             const monthlyMin = adjAnnualMin / divisor;
             const monthlyMax = adjAnnualMax / divisor;
 
-            document.getElementById('displayM').textContent = formatCurrency(data.m);
-            document.getElementById('formulaTag').textContent = `12 + ${bonusMonths} 制度`;
-            document.getElementById('monthlyResult').textContent = `${formatCurrency(monthlyMin)} - ${formatCurrency(monthlyMax)}`;
-            document.getElementById('annualResult').textContent = `${formatCurrency(adjAnnualMin)} - ${formatCurrency(adjAnnualMax)}`;
-
-            const statusEl = document.getElementById('scoreStatus');
-            if (score < 65) {
-                statusEl.textContent = "降階加權"; statusEl.className = "text-[9px] font-black px-1.5 py-0.5 rounded bg-red-50 text-red-500 uppercase";
-            } else if (score >= 90) {
-                statusEl.textContent = "優選加權"; statusEl.className = "text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-500 uppercase";
-            } else {
-                statusEl.textContent = "標準加權"; statusEl.className = "text-[9px] font-black px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-500 uppercase";
-            }
+            document.getElementById('displayM').innerText = formatValue(data.m);
+            document.getElementById('formulaTag').innerText = "12 + " + bonusMonths + " 制度";
+            document.getElementById('monthlyResult').innerText = formatValue(monthlyMin) + " - " + formatValue(monthlyMax);
+            document.getElementById('annualResult').innerText = formatValue(adjAnnualMin) + " - " + formatValue(adjAnnualMax);
 
             document.getElementById('factorDetail').innerHTML = `
-                <div class="flex justify-between"><span>年資加權因子:</span><span>${expW.toFixed(3)}</span></div>
-                <div class="flex justify-between"><span>面試評分加權:</span><span>${interviewW.toFixed(3)}</span></div>
-                <div class="flex justify-between border-t border-slate-100 pt-2 mt-1 text-indigo-600 font-black">
-                    <span>最終總加權值:</span><span class="text-base">${totalW.toFixed(3)}</span>
+                <div class="detail-row"><span>相關年資加權:</span><span>${expW.toFixed(3)}</span></div>
+                <div class="detail-row"><span>面試評分加權:</span><span>${interviewW.toFixed(3)}</span></div>
+                <div class="detail-row total-w">
+                    <span>綜合核定係數:</span><span>${totalW.toFixed(3)}</span>
                 </div>
             `;
         }
